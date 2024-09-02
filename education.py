@@ -4,10 +4,9 @@ import streamlit as st
 from bson import ObjectId
 from pymongo import DESCENDING
 
-from main import db
 
 
-def manage_educational_programs(user):
+def manage_educational_programs(user, db):
     st.subheader("Manage Your Educational Programs")
 
     # Fetch courses by this educator

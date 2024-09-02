@@ -85,7 +85,7 @@ def show_user_dashboard(user):
     elif user['user_type'] == "education_provider":
         st.write("Manage your educational programs:")
         # Add program management options for education providers
-        manage_educational_programs(user)  # Call the educator function here
+        manage_educational_programs(user, db)  # Call the educator function here
     elif user['user_type'] == "administrator":
         st.write("System administration:")
         # Add admin functionalities
