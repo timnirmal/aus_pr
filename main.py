@@ -34,12 +34,21 @@ def main():
         st.session_state.user = None
 
     if st.session_state.logged_in:
-        show_user_dashboard(st.session_state.user)
-        if st.sidebar.button("Logout"):
+        # User is logged in, show sidebar menu for navigation
+        menu = ["Dashboard", "Update Profile", "Logout"]
+        choice = st.sidebar.selectbox("Navigation", menu)
+
+        if choice == "Dashboard":
+            show_user_dashboard(st.session_state.user)
+        elif choice == "Update Profile":
+            update_profile_page(st.session_state.user)
+        elif choice == "Logout":
             st.session_state.logged_in = False
             st.session_state.user = None
             st.rerun()
+
     else:
+        # User is not logged in, show login/register menu
         menu = ["Login", "Register"]
         choice = st.sidebar.selectbox("Menu", menu)
 
@@ -77,8 +86,7 @@ def show_user_dashboard(user):
     st.subheader(f"Welcome, {user['username']}!")
 
     if user['user_type'] == "prospective_migrant":
-        st.write("Manage your migration profile:")
-        update_profile(user, users_collection, db)
+        st.write("Manage your migration profile from the sidebar.")
     elif user['user_type'] == "migration_agent":
         st.write("Manage your clients:")
         # Add client management options for agents
@@ -89,6 +97,11 @@ def show_user_dashboard(user):
     elif user['user_type'] == "administrator":
         st.write("System administration:")
         # Add admin functionalities
+
+
+def update_profile_page(user):
+    st.subheader("Update Profile")
+    update_profile(user, users_collection, db)
 
 
 if __name__ == "__main__":
