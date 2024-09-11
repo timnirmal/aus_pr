@@ -4,7 +4,7 @@ from datetime import datetime
 
 from bson import ObjectId
 
-from recommadations import recommend_pr_pathways
+from user.recommadations import recommend_pr_pathways
 
 
 # Function to fetch anonymized user profiles for agent to choose from

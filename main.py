@@ -13,10 +13,10 @@ from agent.statics import show_migration_agent_statistics
 from education.education import manage_educational_programs
 
 from education.statics import show_full_anonymized_statistics
-from questions import update_profile
-from recommadations import recommend_pr_pathways, show_recommendations, show_saved_recommendations
+from user.questions import update_profile
+from user.recommadations import recommend_pr_pathways, show_recommendations, show_saved_recommendations
 from user.inquery import user_inquiry_section
-from user_management import create_user, authenticate_user
+from user.user_management import create_user, authenticate_user
 
 load_dotenv()
 uri = os.getenv("MONGO_URI")
