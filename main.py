@@ -4,8 +4,11 @@ from pymongo.server_api import ServerApi
 import os
 from dotenv import load_dotenv
 
+from admin.manage_user_account import manage_user_accounts
+from admin.refine_algo import admin_refine_algorithm
 from education import manage_educational_programs
 from questions import update_profile
+from recommadations import recommend_pr_pathways, show_recommendations
 from user_management import create_user, authenticate_user
 
 load_dotenv()
@@ -34,14 +37,35 @@ def main():
         st.session_state.user = None
 
     if st.session_state.logged_in:
-        # User is logged in, show sidebar menu for navigation
-        menu = ["Dashboard", "Update Profile", "Logout"]
+        # User is logged in, show sidebar menu for navigation based on user type
+        user_type = st.session_state.user['user_type']
+
+        if user_type == "prospective_migrant":
+            menu = ["Dashboard", "Update Profile", "Logout"]
+        elif user_type == "migration_agent":
+            menu = ["Dashboard", "Manage Clients", "Logout"]
+        elif user_type == "education_provider":
+            menu = ["Dashboard", "Manage Educational Programs", "Logout"]
+        elif user_type == "administrator":
+            menu = ["Dashboard", "Refine Recommendation Algorithm", "Manage Users", "Logout"]
+
         choice = st.sidebar.selectbox("Navigation", menu)
 
         if choice == "Dashboard":
             show_user_dashboard(st.session_state.user)
         elif choice == "Update Profile":
             update_profile_page(st.session_state.user)
+        elif choice == "Manage Clients" and user_type == "migration_agent":
+            # Add logic to manage clients here
+            st.write("Client Management Page for Migration Agents")
+        elif choice == "Manage Educational Programs" and user_type == "education_provider":
+            manage_educational_programs(st.session_state.user, db)
+        elif choice == "Refine Recommendation Algorithm" and user_type == "administrator":
+            admin_refine_algorithm(db)  # Admin function to refine recommendation algorithm
+        elif choice == "Manage Users" and user_type == "administrator":
+            # Admin function to manage users
+            manage_user_accounts(db)
+            # st.write("User Management for Admin")
         elif choice == "Logout":
             st.session_state.logged_in = False
             st.session_state.user = None
@@ -87,22 +111,21 @@ def show_user_dashboard(user):
 
     if user['user_type'] == "prospective_migrant":
         st.write("Manage your migration profile from the sidebar.")
+        recommendations = recommend_pr_pathways(user, db)
+        show_recommendations(recommendations)
+
     elif user['user_type'] == "migration_agent":
         st.write("Manage your clients:")
-        # Add client management options for agents
     elif user['user_type'] == "education_provider":
         st.write("Manage your educational programs:")
-        # Add program management options for education providers
         manage_educational_programs(user, db)  # Call the educator function here
     elif user['user_type'] == "administrator":
         st.write("System administration:")
         # Add admin functionalities
 
-
 def update_profile_page(user):
     st.subheader("Update Profile")
     update_profile(user, users_collection, db)
-
 
 if __name__ == "__main__":
     main()
