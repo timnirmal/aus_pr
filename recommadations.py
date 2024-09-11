@@ -5,6 +5,9 @@ from bson import ObjectId  # Import ObjectId
 import os
 from dotenv import load_dotenv
 import streamlit as st
+from datetime import datetime
+
+from streamlit import columns
 
 # Load environment variables
 load_dotenv()
@@ -42,6 +45,15 @@ def fetch_user_data(user_id, db):
         "pr_points": user.get('pr_points', 0)
     }
 
+# Function to fetch the name of courses, institutions, locations, and skills
+def fetch_name(collection, object_ids):
+    if not object_ids:
+        return []
+    results = db[collection].find({"_id": {"$in": object_ids}})
+    return [result.get('course_name' if collection == 'courses' else
+                       'institution_name' if collection == 'institutions' else
+                       'location_name' if collection == 'locations' else 'skill_name', 'Unknown')
+            for result in results]
 
 # Function to fetch algorithm parameters
 def fetch_algorithm_parameters(db):
@@ -91,8 +103,10 @@ def calculate_total_score(skill_match, experience_match, location_match, pr_poin
     duration_weight = algorithm_parameters["duration_weight"]
 
     # Normalize cost and duration to a percentage
-    normalized_cost = normalize(cost, 0, 50000)
-    normalized_duration = normalize(duration, 0, 60)
+    normalized_cost = (cost - 0) / (50000 - 0) * 100
+    normalized_duration = (duration - 0) / (60 - 0) * 100
+    #normalized_cost = normalize(cost, 0, 50000)
+    #normalized_duration = normalize(duration, 0, 60)
 
     # Apply penalties for lower skill match, experience match, and PR points match
     skill_penalty = (100 - skill_match) * 0.05  # Penalty for skill match less than 100%
@@ -166,14 +180,18 @@ def rank_and_categorize_pathways(user_data, pathways, algorithm_parameters):
     for pathway in pathways:
         # Calculate match scores for skills, experience, location, and PR points
         skill_match = calculate_skill_match(user_data['skills'], pathway['required_skills'])
-        experience_match = calculate_experience_match(user_data['experience_years'],
-                                                      pathway['required_experience_years'])
+        experience_match = calculate_experience_match(user_data['experience_years'], pathway['required_experience_years'])
         location_match = calculate_location_match(user_data['preferred_locations'], pathway['preferred_locations'])
         pr_points_match = calculate_pr_points_match(user_data['pr_points'], pathway['pr_points_threshold'])
 
         # Check if the user has completed recommended courses for this pathway
-        pathway_courses = [course for course in pathway['recommended_courses']]  # Course IDs or names
+        pathway_courses = pathway['recommended_courses']  # Course IDs or names
         course_completion = calculate_course_completion(user_data['completed_courses'], pathway_courses)
+
+        # Fetch names of required entities (skills, courses, locations)
+        skill_names = fetch_name('skills', pathway['required_skills'])
+        course_names = fetch_name('courses', pathway['recommended_courses'])
+        location_names = fetch_name('locations', pathway.get('preferred_locations', []))
 
         # Use the new fields for difficulty, success rate, cost, and duration
         success_rate = pathway.get('success_rate', 0)
@@ -185,34 +203,29 @@ def rank_and_categorize_pathways(user_data, pathways, algorithm_parameters):
         total_score = calculate_total_score(skill_match, experience_match, location_match, pr_points_match,
                                             course_completion, difficulty_level, success_rate, cost, duration, algorithm_parameters)
 
+        # Collect all the data for each pathway
+        pathway_info = {
+            "pathway_id": str(pathway['_id']),  # Convert ObjectId to string
+            "pathway_name": pathway['pathway_name'],
+            "score": total_score,
+            "cost": cost,
+            "duration": duration,
+            "success_rate": success_rate,
+            "difficulty_level": difficulty_level,
+            "required_skills": skill_names,
+            "required_experience_years": pathway['required_experience_years'],
+            "pr_points_threshold": pathway['pr_points_threshold'],
+            "recommended_courses": course_names,
+            "locations": location_names
+        }
+
         # Categorize based on total score
         if total_score >= 80:
-            recommendations['fully_qualified'].append({
-                "pathway_name": pathway['pathway_name'],
-                "score": total_score,
-                "cost": pathway['estimated_cost'],
-                "duration": pathway['estimated_duration'],
-                "success_rate": pathway['success_rate'],
-                "difficulty_level": pathway['difficulty_level']
-            })
+            recommendations['fully_qualified'].append(pathway_info)
         elif total_score >= 40:
-            recommendations['partially_qualified'].append({
-                "pathway_name": pathway['pathway_name'],
-                "score": total_score,
-                "cost": pathway['estimated_cost'],
-                "duration": pathway['estimated_duration'],
-                "success_rate": pathway['success_rate'],
-                "difficulty_level": pathway['difficulty_level']
-            })
+            recommendations['partially_qualified'].append(pathway_info)
         else:
-            recommendations['potential_interest'].append({
-                "pathway_name": pathway['pathway_name'],
-                "score": total_score,
-                "cost": pathway['estimated_cost'],
-                "duration": pathway['estimated_duration'],
-                "success_rate": pathway['success_rate'],
-                "difficulty_level": pathway['difficulty_level']
-            })
+            recommendations['potential_interest'].append(pathway_info)
 
     return recommendations
 
@@ -220,26 +233,171 @@ def rank_and_categorize_pathways(user_data, pathways, algorithm_parameters):
 def recommend_pr_pathways(user, db):
     """Main recommendation function."""
     # Fetch user and pathway data
+    print("Fetching user data...")
     user_data = fetch_user_data(user["_id"], db)
     pathways = fetch_pr_pathways(db)
+    print("Fetching algorithm parameters...")
     algorithm_parameters = fetch_algorithm_parameters(db)
 
+    print("Calculating pathway recommendations...")
     recommendations = rank_and_categorize_pathways(user_data, pathways, algorithm_parameters)
+    print("Recommendations calculated successfully!")
+
+    print(recommendations)
 
     return recommendations
 
 
-def show_recommendations(recommendations):
+
+
+
+
+
+# Function to save a preferred pathway to the database
+# Function to save a preferred pathway to the database
+def save_preferred_pathway(user_id, pathway, db):
+    # Convert Pandas Series to dictionary if necessary
+    if isinstance(pathway, pd.Series):
+        pathway = pathway.to_dict()
+
+    # Check if the user already has saved recommendations
+    existing_record = db["saved_recommendations"].find_one({"user_id": ObjectId(user_id)})
+
+    # Pathway details to be saved
+    saved_recommendation = {
+        "pathway_id": ObjectId(pathway['pathway_id']),
+        "saved_at": datetime.utcnow(),
+        "pathway_details": pathway  # Store the entire pathway details
+    }
+
+    print(saved_recommendation)
+
+    # If the user has saved recommendations, append the new one
+    if existing_record:
+        print("Existing record found...")
+        db["saved_recommendations"].update_one(
+            {"user_id": ObjectId(user_id)},
+            {"$push": {"saved_recommendations": saved_recommendation}}
+        )
+    else:
+        print("No existing record found...")
+        # If no record exists for this user, create a new one
+        db["saved_recommendations"].insert_one({
+            "user_id": ObjectId(user_id),
+            "saved_recommendations": [saved_recommendation]
+        })
+
+    return "Recommendation saved successfully!"
+
+
+
+# Function to fetch saved recommendations
+def fetch_saved_recommendations(user_id, db):
+    saved = db["saved_recommendations"].find_one({"user_id": ObjectId(user_id)})
+    return saved["saved_recommendations"] if saved else []
+
+
+# Function to show recommendations with a save button
+def show_recommendations(recommendations, user, db, rec_saved):
     """Display recommendations in a user-friendly format using Streamlit."""
+    st.subheader("New Recommendations")
+
+    if len(rec_saved) > 0:
+        saved_pathway_ids = rec_saved['pathway_id']
+        # convert to list
+        saved_pathway_ids = saved_pathway_ids.tolist()
+        # st.write(saved_pathway_ids)
+    else:
+        saved_pathway_ids = []
+
     for category, paths in recommendations.items():
         st.subheader(f"{category.upper()} PATHWAYS:")
 
         if paths:
-            # Convert the list of pathways into a DataFrame for easier display
+            # Prepare the DataFrame with all the fields
             df = pd.DataFrame(paths)
-            df_display = df[['pathway_name', 'score', 'cost', 'duration', 'success_rate', 'difficulty_level']]
 
-            # Display the DataFrame as a table
+            # st.write(df.columns)
+
+            # Adjust the DataFrame display to show full fields like skills, courses, and locations
+            df_display = df[['pathway_id', 'pathway_name', 'score', 'cost', 'duration', 'success_rate',
+                             'difficulty_level', 'required_skills', 'required_experience_years',
+                             'pr_points_threshold', 'recommended_courses', 'locations']]
+
+            # Display the DataFrame in Streamlit
             st.table(df_display)
+
+            # Save button for each recommendation, only show if the pathway is not already saved
+            for i, path in df.iterrows():
+                if path['pathway_id'] not in saved_pathway_ids:
+                    if st.button(f"Save {path['pathway_name']}", key=f"save_{path['pathway_id']}"):
+                        save_message = save_preferred_pathway(user["_id"], path, db)
+                        st.success(save_message)
+                        st.rerun()  # Refresh the page to show the saved recommendation
         else:
             st.write(f"No {category.lower()} pathways found.")
+
+
+
+# Function to remove a saved pathway from the database
+def remove_saved_pathway(user_id, pathway_id, db):
+    # Remove the pathway from the user's saved recommendations
+    db["saved_recommendations"].update_one(
+        {"user_id": ObjectId(user_id)},
+        {"$pull": {"saved_recommendations": {"pathway_id": ObjectId(pathway_id)}}}
+    )
+    return "Recommendation removed successfully!"
+
+# Function to display saved recommendations
+def show_saved_recommendations(user, db):
+    st.subheader("Saved Pathways")
+
+    # Fetch saved recommendations from the database
+    saved_paths = fetch_saved_recommendations(user["_id"], db)
+
+    if saved_paths:
+        # Prepare the DataFrame for displaying saved recommendations
+        saved_df = pd.DataFrame([path['pathway_details'] for path in saved_paths])
+
+        # Adjust the DataFrame to show important fields
+        saved_df_display = saved_df[['pathway_name', 'cost', 'duration', 'success_rate', 'difficulty_level',
+                                     'required_skills', 'recommended_courses', 'locations', 'pr_points_threshold']]
+
+        # Display the saved recommendations as a table
+        st.table(saved_df_display)
+
+        # Add "Remove" buttons for each saved recommendation
+        for i, path in saved_df.iterrows():
+            if st.button(f"Remove {path['pathway_name']}", key=f"remove_{path['pathway_id']}"):
+                remove_message = remove_saved_pathway(user["_id"], path['pathway_id'], db)
+                st.success(remove_message)
+                st.rerun()  # Refresh the page to reflect the removal
+
+        return saved_df
+    else:
+        st.write("No saved pathways yet.")
+
+        return pd.DataFrame()
+
+
+
+
+# # Main function to handle the page logic
+# def main(user, db):
+#     st.title("PR Pathway Recommendations")
+#
+#
+#
+#     # Fetch and show new recommendations
+#     recommendations = recommend_pr_pathways(user, db)
+#     show_recommendations(recommendations, user, db)
+
+# # Test the recommendation function
+# user_id = "66dfe4fc2315f2dbfb3d04d3"  # Replace with your actual user_id
+# recommendations = recommend_pr_pathways({"_id": ObjectId(user_id)}, db)
+#
+# # Print the final recommendations
+# for category, paths in recommendations.items():
+#     print(f"\n{category.upper()} PATHWAYS:")
+#     for path in paths:
+#         print(path)

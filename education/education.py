@@ -51,22 +51,8 @@ def manage_educational_programs(user, db):
             }
             db["courses"].insert_one(new_course)
             st.success(f"Course '{new_course_name}' added successfully.")
-            st.experimental_rerun()  # Refresh the page to show new course
+            st.rerun()  # Refresh the page to show new course
         else:
             st.error("Course Name and Location are required.")
 
-    # Display anonymized statistics on user interest
-    st.subheader("Anonymized Interest Statistics")
-    interest_stats = db["recommendations"].aggregate([
-        {"$unwind": "$recommendations"},
-        {"$match": {"recommendations.course_id": {"$exists": True}}},
-        {"$group": {"_id": "$recommendations.course_id", "count": {"$sum": 1}}},
-        {"$sort": {"count": DESCENDING}},
-        {"$limit": 10}
-    ])
 
-    st.write("Top 10 Courses by User Interest:")
-    for stat in interest_stats:
-        course = db["courses"].find_one({"_id": ObjectId(stat["_id"])})
-        if course:
-            st.write(f"- {course['course_name']} at {course['location']}: {stat['count']} users interested")

@@ -6,9 +6,11 @@ from dotenv import load_dotenv
 
 from admin.manage_user_account import manage_user_accounts
 from admin.refine_algo import admin_refine_algorithm
-from education import manage_educational_programs
+from education.education import manage_educational_programs
+
+from education.statics import show_anonymized_interest_statistics, show_full_anonymized_statistics
 from questions import update_profile
-from recommadations import recommend_pr_pathways, show_recommendations
+from recommadations import recommend_pr_pathways, show_recommendations, show_saved_recommendations
 from user_management import create_user, authenticate_user
 
 load_dotenv()
@@ -110,21 +112,40 @@ def show_user_dashboard(user):
     st.subheader(f"Welcome, {user['username']}!")
 
     if user['user_type'] == "prospective_migrant":
-        st.write("Manage your migration profile from the sidebar.")
-        recommendations = recommend_pr_pathways(user, db)
-        show_recommendations(recommendations)
+        # st.write("Manage your migration profile from the sidebar.")
+        # Show saved recommendations when the page loads
+        rec_saved = show_saved_recommendations(user, db)
+        # Show recommendations with a loading spinner
+        with st.spinner('Loading recommendations...'):
+            recommendations = recommend_pr_pathways(st.session_state.user, db)
+#             recommendations = {'fully_qualified': [], 'partially_qualified': [], 'potential_interest': [{'pathway_id': '66dfe2427ff7cf28671c4ad3', 'pathway_name': 'IT Specialist Pathway', 'score': 18.75, 'cost': 15000, 'duration':
+# 36, 'success_rate': 85, 'difficulty_level': 5, 'required_skills': ['IT', 'Software Development'], 'required_experience_years': 2, 'pr_points_threshold': 70, 'recommended_courses': ['Bachelor of IT', 'Master of Data Science'], 'locations': ['Sydney', 'Melbourne']}]}
+            show_recommendations(recommendations, user, db, rec_saved)
+
+        st.markdown("""
+            ---
+            **Disclaimer**: The recommendations provided by this system are based on the available data and algorithmic processing. 
+            While we strive to ensure the accuracy and relevance of the information, we cannot guarantee that every recommendation 
+            will be fully applicable to your situation. The system's results should be considered as guidance only and not as an 
+            authoritative decision-making tool. 
+
+            **Affiliation**: This system is not officially affiliated with any immigration authorities or government institutions. 
+            All the data used is for educational and guidance purposes, and users should consult official resources for 
+            detailed and legally binding information.
+            """)
 
     elif user['user_type'] == "migration_agent":
         st.write("Manage your clients:")
     elif user['user_type'] == "education_provider":
         st.write("Manage your educational programs:")
-        manage_educational_programs(user, db)  # Call the educator function here
+        # manage_educational_programs(user, db)  # Call the educator function here
+        show_full_anonymized_statistics(db)
     elif user['user_type'] == "administrator":
         st.write("System administration:")
         # Add admin functionalities
 
 def update_profile_page(user):
-    st.subheader("Update Profile")
+    # st.subheader("Update Profile")
     update_profile(user, users_collection, db)
 
 if __name__ == "__main__":
