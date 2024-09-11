@@ -1,54 +1,68 @@
 import streamlit as st
 import pandas as pd
 
-# Function to aggregate and display anonymized interest statistics for "prospective_migrant" users
-def show_anonymized_interest_statistics(db):
-    st.subheader("Anonymized Interest Statistics")
+# Function to show migration agent statistics and analysis
+def show_migration_agent_statistics(db):
+    st.subheader("Migration Agent Statistics and Analysis")
 
-    # Aggregate statistics on saved recommendations, filtering by user_type = "prospective_migrant"
-    interest_stats = db["saved_recommendations"].aggregate([
+    # Top PR Pathways (most saved by prospective migrants)
+    st.write("Top PR Pathways:")
+    pathway_stats = db["saved_recommendations"].aggregate([
         {"$lookup": {
-            "from": "users",  # Join with the users collection
+            "from": "users",
             "localField": "user_id",
             "foreignField": "_id",
             "as": "user_info"
         }},
-        {"$match": {"user_info.user_type": "prospective_migrant"}},  # Only count prospective migrants
+        {"$match": {"user_info.user_type": "prospective_migrant"}},  # Only prospective migrants
         {"$unwind": "$saved_recommendations"},  # Deconstruct saved_recommendations array
-        {"$group": {"_id": "$saved_recommendations.pathway_id", "count": {"$sum": 1}}},  # Group by pathway_id and count
-        {"$sort": {"count": -1}},  # Sort by count in descending order
-        {"$limit": 10}  # Limit to top 10
+        {"$group": {"_id": "$saved_recommendations.pathway_id", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
     ])
 
-    # Prepare the data for display
-    stats_list = []
-    for stat in interest_stats:
-        # Fetch the pathway details for each pathway_id
+    pathway_stats_list = []
+    for stat in pathway_stats:
         pathway = db["pr_pathways"].find_one({"_id": stat["_id"]})
         if pathway:
-            stats_list.append({
+            pathway_stats_list.append({
                 "pathway_name": pathway.get("pathway_name", "Unknown Pathway"),
                 "times_saved": stat["count"]
             })
 
-    # Convert the list to a DataFrame for easier display
-    stats_df = pd.DataFrame(stats_list)
-
-    # Display the statistics in a table
-    if not stats_df.empty:
-        st.table(stats_df)
+    pathway_stats_df = pd.DataFrame(pathway_stats_list)
+    if not pathway_stats_df.empty:
+        st.table(pathway_stats_df)
     else:
-        st.write("No interest statistics available.")
+        st.write("No pathway statistics available.")
 
+    # Top Skills among prospective migrants
+    st.write("Top Skills:")
+    skill_stats = db["users"].aggregate([
+        {"$match": {"user_type": "prospective_migrant"}},
+        {"$unwind": "$profile.skills"},  # Unwind skills
+        {"$group": {"_id": "$profile.skills", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ])
 
-# Function to fetch and aggregate user preferences, filtering by "prospective_migrant"
-def aggregate_user_preferences(db):
-    st.subheader("User Preferences Insights")
+    skill_stats_list = []
+    for stat in skill_stats:
+        skill_stats_list.append({
+            "skill": stat["_id"],
+            "user_count": stat["count"]
+        })
 
-    # Location preferences (only prospective migrants)
-    st.write("Top Location Preferences:")
+    skill_stats_df = pd.DataFrame(skill_stats_list)
+    if not skill_stats_df.empty:
+        st.table(skill_stats_df)
+    else:
+        st.write("No skill data available.")
+
+    # Top Preferred Locations for Migration
+    st.write("Top Preferred Locations:")
     location_pref_stats = db["users"].aggregate([
-        {"$match": {"user_type": "prospective_migrant"}},  # Only prospective migrants
+        {"$match": {"user_type": "prospective_migrant"}},
         {"$unwind": "$profile.preferences.location_preference"},  # Unwind the location preferences
         {"$group": {"_id": "$profile.preferences.location_preference", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
@@ -61,61 +75,53 @@ def aggregate_user_preferences(db):
             "location": stat["_id"],
             "user_count": stat["count"]
         })
-    location_stats_df = pd.DataFrame(location_stats_list)
 
+    location_stats_df = pd.DataFrame(location_stats_list)
     if not location_stats_df.empty:
         st.table(location_stats_df)
     else:
         st.write("No location preference data available.")
 
-    # Course preferences (only prospective migrants)
-    st.write("Top Course Preferences:")
-    course_pref_stats = db["users"].aggregate([
-        {"$match": {"user_type": "prospective_migrant"}},  # Only prospective migrants
-        {"$unwind": "$profile.preferences.study_preference"},  # Unwind the study preferences
-        {"$group": {"_id": "$profile.preferences.study_preference", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": 10}
+
+    # Cost and Duration Analysis
+    st.write("Cost and Duration Analysis (Average for Saved Pathways):")
+    cost_duration_stats = db["saved_recommendations"].aggregate([
+        {"$lookup": {
+            "from": "users",
+            "localField": "user_id",
+            "foreignField": "_id",
+            "as": "user_info"
+        }},
+        {"$match": {"user_info.user_type": "prospective_migrant"}},
+        {"$unwind": "$saved_recommendations"},  # Unwind saved_recommendations
+        {"$lookup": {
+            "from": "pr_pathways",
+            "localField": "saved_recommendations.pathway_id",
+            "foreignField": "_id",
+            "as": "pathway_details"
+        }},
+        {"$unwind": "$pathway_details"},  # Unwind pathway details
+        {"$group": {
+            "_id": None,
+            "avg_cost": {"$avg": "$pathway_details.estimated_cost"},
+            "avg_duration": {"$avg": "$pathway_details.estimated_duration"}
+        }}
     ])
 
-    course_stats_list = []
-    for stat in course_pref_stats:
-        course_stats_list.append({
-            "course": stat["_id"],
-            "user_count": stat["count"]
+    cost_duration_stats_list = []
+    for stat in cost_duration_stats:
+        cost_duration_stats_list.append({
+            "average_cost": stat["avg_cost"],
+            "average_duration": stat["avg_duration"]
         })
-    course_stats_df = pd.DataFrame(course_stats_list)
 
-    if not course_stats_df.empty:
-        st.table(course_stats_df)
+    cost_duration_df = pd.DataFrame(cost_duration_stats_list)
+    if not cost_duration_df.empty:
+        st.table(cost_duration_df)
     else:
-        st.write("No course preference data available.")
-
-    # Institution preferences (only prospective migrants)
-    st.write("Top Institution Preferences:")
-    institution_pref_stats = db["users"].aggregate([
-        {"$match": {"user_type": "prospective_migrant"}},  # Only prospective migrants
-        {"$unwind": "$profile.preferences.study_preference"},  # Unwind the study preferences
-        {"$group": {"_id": "$profile.preferences.study_preference", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": 10}
-    ])
-
-    institution_stats_list = []
-    for stat in institution_pref_stats:
-        institution_stats_list.append({
-            "institution": stat["_id"].split(" - ")[0],  # Extract institution name from preference string
-            "user_count": stat["count"]
-        })
-    institution_stats_df = pd.DataFrame(institution_stats_list)
-
-    if not institution_stats_df.empty:
-        st.table(institution_stats_df)
-    else:
-        st.write("No institution preference data available.")
+        st.write("No cost and duration data available.")
 
 
 # Combine all insights into one function
-def show_full_anonymized_statistics(db):
-    show_anonymized_interest_statistics(db)
-    aggregate_user_preferences(db)
+def show_full_migration_agent_statistics(db):
+    show_migration_agent_statistics(db)

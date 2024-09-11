@@ -2,7 +2,7 @@ from datetime import datetime
 
 import bcrypt
 from bson import ObjectId
-
+import streamlit as st
 
 
 def hash_password(password):
@@ -45,6 +45,16 @@ def create_user(username, password, user_type, users_collection):
 
 def authenticate_user(username, password, users_collection):
     user = users_collection.find_one({"username": username})
-    if user and verify_password(user["password"], password):
-        return user
-    return None
+    if user:
+        # Check if the user is disabled
+        if user.get('disabled', False):
+            st.error("This account has been disabled. Please contact support.")
+            return None
+        elif verify_password(user["password"], password):
+            return user
+        else:
+            return None
+    else:
+        return None
+
+

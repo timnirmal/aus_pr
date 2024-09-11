@@ -6,11 +6,16 @@ from dotenv import load_dotenv
 
 from admin.manage_user_account import manage_user_accounts
 from admin.refine_algo import admin_refine_algorithm
+from admin.reply import show_feedbacks_for_admin, manage_user_inquiries
+from admin.statics import admin_report_page
+from agent.feedback import show_past_feedback, show_agent_feedbacks
+from agent.statics import show_migration_agent_statistics
 from education.education import manage_educational_programs
 
-from education.statics import show_anonymized_interest_statistics, show_full_anonymized_statistics
+from education.statics import show_full_anonymized_statistics
 from questions import update_profile
 from recommadations import recommend_pr_pathways, show_recommendations, show_saved_recommendations
+from user.inquery import user_inquiry_section
 from user_management import create_user, authenticate_user
 
 load_dotenv()
@@ -43,13 +48,13 @@ def main():
         user_type = st.session_state.user['user_type']
 
         if user_type == "prospective_migrant":
-            menu = ["Dashboard", "Update Profile", "Logout"]
+            menu = ["Dashboard", "Update Profile", "Inquery", "Logout"]
         elif user_type == "migration_agent":
-            menu = ["Dashboard", "Manage Clients", "Logout"]
+            menu = ["Dashboard", "Feedbacks", "Logout"]
         elif user_type == "education_provider":
             menu = ["Dashboard", "Manage Educational Programs", "Logout"]
         elif user_type == "administrator":
-            menu = ["Dashboard", "Refine Recommendation Algorithm", "Manage Users", "Logout"]
+            menu = ["Dashboard", "Refine Recommendation Algorithm", "Manage Users", "Reply", "Inquery", "Logout"]
 
         choice = st.sidebar.selectbox("Navigation", menu)
 
@@ -57,9 +62,13 @@ def main():
             show_user_dashboard(st.session_state.user)
         elif choice == "Update Profile":
             update_profile_page(st.session_state.user)
-        elif choice == "Manage Clients" and user_type == "migration_agent":
-            # Add logic to manage clients here
+        elif choice == "Inquery" and user_type == "prospective_migrant":
+            user_inquiry_section(st.session_state.user, db)
+        elif choice == "Feedbacks" and user_type == "migration_agent":
+            # Add logic to Feedbacks here
             st.write("Client Management Page for Migration Agents")
+            show_past_feedback(st.session_state.user, db)
+            show_agent_feedbacks(db)
         elif choice == "Manage Educational Programs" and user_type == "education_provider":
             manage_educational_programs(st.session_state.user, db)
         elif choice == "Refine Recommendation Algorithm" and user_type == "administrator":
@@ -68,6 +77,13 @@ def main():
             # Admin function to manage users
             manage_user_accounts(db)
             # st.write("User Management for Admin")
+        elif choice == "Inquery" and user_type == "administrator":
+            # Admin function to reply to user queries
+            # st.write("Reply to User Queries")
+            manage_user_inquiries(db)
+        elif choice == "Reply" and user_type == "administrator":
+            # Admin function to reply to user queries
+            show_feedbacks_for_admin(db)
         elif choice == "Logout":
             st.session_state.logged_in = False
             st.session_state.user = None
@@ -118,8 +134,10 @@ def show_user_dashboard(user):
         # Show recommendations with a loading spinner
         with st.spinner('Loading recommendations...'):
             recommendations = recommend_pr_pathways(st.session_state.user, db)
-#             recommendations = {'fully_qualified': [], 'partially_qualified': [], 'potential_interest': [{'pathway_id': '66dfe2427ff7cf28671c4ad3', 'pathway_name': 'IT Specialist Pathway', 'score': 18.75, 'cost': 15000, 'duration':
-# 36, 'success_rate': 85, 'difficulty_level': 5, 'required_skills': ['IT', 'Software Development'], 'required_experience_years': 2, 'pr_points_threshold': 70, 'recommended_courses': ['Bachelor of IT', 'Master of Data Science'], 'locations': ['Sydney', 'Melbourne']}]}
+            #             recommendations = {'fully_qualified': [], 'partially_qualified': [], 'potential_interest': [{'pathway_id': '66dfe2427ff7cf28671c4ad3', 'pathway_name': 'IT Specialist Pathway', 'score': 18.75, 'cost': 15000, 'duration':
+            # 36, 'success_rate': 85, 'difficulty_level': 5, 'required_skills': ['IT', 'Software Development'], 'required_experience_years': 2, 'pr_points_threshold': 70, 'recommended_courses': ['Bachelor of IT', 'Master of Data Science'], 'locations': ['Sydney', 'Melbourne']}]}
+            # keep only first 10 recommendations
+            recommendations = {k: recommendations[k][:10] for k in recommendations}
             show_recommendations(recommendations, user, db, rec_saved)
 
         st.markdown("""
@@ -135,18 +153,22 @@ def show_user_dashboard(user):
             """)
 
     elif user['user_type'] == "migration_agent":
-        st.write("Manage your clients:")
+        # st.write("Manage your clients:")
+        show_migration_agent_statistics(db)
     elif user['user_type'] == "education_provider":
-        st.write("Manage your educational programs:")
+        # st.write("Manage your educational programs:")
         # manage_educational_programs(user, db)  # Call the educator function here
         show_full_anonymized_statistics(db)
     elif user['user_type'] == "administrator":
-        st.write("System administration:")
+        # st.write("System administration:")
         # Add admin functionalities
+        admin_report_page(db)
+
 
 def update_profile_page(user):
     # st.subheader("Update Profile")
     update_profile(user, users_collection, db)
+
 
 if __name__ == "__main__":
     main()
