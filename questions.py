@@ -4,9 +4,10 @@ from pymongo import MongoClient  # Assuming you're using pymongo for MongoDB
 
 def update_profile(user, users_collection, db):
     st.subheader("Update Profile")
-    print(user)
-
     profile = user.get('profile', {})
+
+    # Fetch available courses from the courses table
+    available_courses = [course['course_name'] for course in db["courses"].find()]
 
     # Profile fields
     new_first_name = st.text_input("First Name", profile.get('first_name', ''))
@@ -18,16 +19,16 @@ def update_profile(user, users_collection, db):
                                       min_value=datetime(1950, 1, 1),
                                       max_value=datetime.now())
 
-    # Convert the date to a datetime object to avoid MongoDB errors
-    if new_date_of_birth:  # Ensure new_date_of_birth is not None
-        new_date_of_birth_datetime = datetime.combine(new_date_of_birth, datetime.min.time())
-    else:
-        new_date_of_birth_datetime = None  # Or you can set a default value if required
+    # Convert the date to a datetime object for MongoDB
+    new_date_of_birth_datetime = datetime.combine(new_date_of_birth, datetime.min.time()) if new_date_of_birth else None
 
+    # Gender
     gender_options = ["Male", "Female", "Other"]
     new_gender = st.selectbox("Gender", gender_options,
                               index=gender_options.index(profile.get('gender', 'Other'))
                               if profile.get('gender', 'Other') in gender_options else 2)
+
+    # Current Location
     new_location = st.text_input("Current Location", profile.get('location', ''))
 
     # Nationalities list
@@ -56,7 +57,7 @@ def update_profile(user, users_collection, db):
         "Vanuatuan", "Venezuelan", "Vietnamese", "Yemeni", "Zambian", "Zimbabwean"
     ]
 
-    # Convert to lowercase if required
+    # Convert to lowercase
     nationalities_lowercase = [nationality.lower() for nationality in nationalities]
 
     # Nationality select box with default set to "Sri Lankan"
@@ -70,15 +71,67 @@ def update_profile(user, users_collection, db):
     current_skills = profile.get('skills', [])
     new_skills = st.multiselect("Skills", available_skills, default=current_skills)
 
-    # Years of experience
-    new_experience_years = st.number_input("Years of Experience", value=profile.get('experience_years', 0), min_value=0)
-
     # English proficiency
     english_proficiency_options = ["Beginner", "Intermediate", "Advanced", "Native"]
     current_proficiency = profile.get('english_proficiency', 'Beginner')
     new_english_proficiency = st.selectbox("English Proficiency", english_proficiency_options,
                                            index=english_proficiency_options.index(current_proficiency)
                                            if current_proficiency in english_proficiency_options else 0)
+
+
+    st.divider()
+
+    # Employment (Multiple Entries)
+    employment_entries = profile.get('employment', [])
+    employment_count = st.number_input("Number of Employment Entries", min_value=1, value=len(employment_entries) if len(employment_entries) > 0 else 1)
+
+    new_employment = []
+    for i in range(employment_count):
+        st.write(f"Employment #{i + 1}")
+        job_title = st.text_input(f"Job Title #{i + 1}", employment_entries[i].get('job_title', '') if i < len(employment_entries) else "")
+        company = st.text_input(f"Company #{i + 1}", employment_entries[i].get('company', '') if i < len(employment_entries) else "")
+        years_in_role = st.number_input(f"Years in Current Role #{i + 1}", min_value=0, value=employment_entries[i].get('years_in_current_role', 0) if i < len(employment_entries) else 0)
+        new_employment.append({
+            "job_title": job_title,
+            "company": company,
+            "years_in_current_role": years_in_role
+        })
+
+    st.divider()
+
+    # Education (Multiple Entries)
+    education_entries = profile.get('education', [])
+    education_count = st.number_input("Number of Education Entries", min_value=1,
+                                      value=len(education_entries) if len(education_entries) > 0 else 1)
+
+    new_education = []
+    for i in range(education_count):
+        st.write(f"Education #{i + 1}")
+
+        # Use selectbox to select courses from the available courses in the courses table
+        degree_or_course_name = st.selectbox(f"Degree or Course Name #{i + 1}", available_courses,
+                                             index=available_courses.index(
+                                                 education_entries[i].get('degree_or_course_name', ''))
+                                             if i < len(education_entries) and education_entries[i].get(
+                                                 'degree_or_course_name', '') in available_courses
+                                             else 0)
+
+        institution = st.text_input(f"Institution #{i + 1}",
+                                    education_entries[i].get('institution', '') if i < len(education_entries) else "")
+
+        completion_year = st.number_input(f"Completion Year #{i + 1}", min_value=1950, max_value=datetime.now().year,
+                                          value=education_entries[i].get('completion_year',
+                                                                         datetime.now().year) if i < len(
+                                              education_entries) else datetime.now().year)
+
+        new_education.append({
+            "degree_or_course_name": degree_or_course_name,
+            "institution": institution,
+            "completion_year": completion_year
+        })
+
+    st.divider()
+
 
     st.subheader("Preferences")
 
@@ -104,12 +157,13 @@ def update_profile(user, users_collection, db):
             "profile": {
                 "first_name": new_first_name,
                 "last_name": new_last_name,
-                "date_of_birth": new_date_of_birth_datetime,  # Using datetime for MongoDB compatibility
+                "date_of_birth": new_date_of_birth_datetime,
                 "gender": new_gender,
                 "location": new_location,
                 "nationality": new_nationality,
                 "skills": new_skills,
-                "experience_years": new_experience_years,
+                "employment": new_employment,  # Multiple employment entries
+                "education": new_education,  # Consolidated education and courses
                 "english_proficiency": new_english_proficiency,
                 "preferences": {
                     "location_preference": new_location_preference,
