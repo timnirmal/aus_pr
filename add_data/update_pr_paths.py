@@ -1,8 +1,7 @@
-from pymongo import MongoClient
-from bson import ObjectId
-from datetime import datetime
 import os
+
 from dotenv import load_dotenv
+from pymongo import MongoClient
 
 # Load MongoDB URI from environment variables
 load_dotenv()

@@ -1,13 +1,12 @@
-import pandas as pd
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
-from bson import ObjectId  # Import ObjectId
 import os
-from dotenv import load_dotenv
-import streamlit as st
 from datetime import datetime
 
-from streamlit import columns
+import pandas as pd
+import streamlit as st
+from bson import ObjectId  # Import ObjectId
+from dotenv import load_dotenv
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
 # Load environment variables
 load_dotenv()
@@ -27,6 +26,7 @@ try:
 except Exception as e:
     print(e)
 
+
 # Function to fetch user data
 def fetch_user_data(user_id, db):
     print(user_id)
@@ -45,6 +45,7 @@ def fetch_user_data(user_id, db):
         "pr_points": user.get('pr_points', 0)
     }
 
+
 # Function to fetch the name of courses, institutions, locations, and skills
 def fetch_name(collection, object_ids):
     if not object_ids:
@@ -54,6 +55,7 @@ def fetch_name(collection, object_ids):
                        'institution_name' if collection == 'institutions' else
                        'location_name' if collection == 'locations' else 'skill_name', 'Unknown')
             for result in results]
+
 
 # Function to fetch algorithm parameters
 def fetch_algorithm_parameters(db):
@@ -73,6 +75,7 @@ def fetch_algorithm_parameters(db):
             "cost_weight": 0.05,
             "duration_weight": 0.05
         }
+
 
 # Function to check if the user has completed recommended courses
 def calculate_course_completion(user_courses, pathway_courses):
@@ -105,8 +108,8 @@ def calculate_total_score(skill_match, experience_match, location_match, pr_poin
     # Normalize cost and duration to a percentage
     normalized_cost = (cost - 0) / (50000 - 0) * 100
     normalized_duration = (duration - 0) / (60 - 0) * 100
-    #normalized_cost = normalize(cost, 0, 50000)
-    #normalized_duration = normalize(duration, 0, 60)
+    # normalized_cost = normalize(cost, 0, 50000)
+    # normalized_duration = normalize(duration, 0, 60)
 
     # Apply penalties for lower skill match, experience match, and PR points match
     skill_penalty = (100 - skill_match) * 0.05  # Penalty for skill match less than 100%
@@ -115,15 +118,15 @@ def calculate_total_score(skill_match, experience_match, location_match, pr_poin
 
     # Calculate the total score with increased weight for cost and duration
     total_score = (
-        (skill_match * skill_weight) +
-        (experience_match * experience_weight) +
-        (course_completion * course_completion_weight) +
-        (location_match * location_weight) +
-        (pr_points_match * pr_points_weight) +
-        (success_rate * success_rate_weight) +
-        ((100 - difficulty_level) * difficulty_weight) +
-        ((100 - normalized_cost) * cost_weight) +
-        ((100 - normalized_duration) * duration_weight)
+            (skill_match * skill_weight) +
+            (experience_match * experience_weight) +
+            (course_completion * course_completion_weight) +
+            (location_match * location_weight) +
+            (pr_points_match * pr_points_weight) +
+            (success_rate * success_rate_weight) +
+            ((100 - difficulty_level) * difficulty_weight) +
+            ((100 - normalized_cost) * cost_weight) +
+            ((100 - normalized_duration) * duration_weight)
     )
 
     # # Apply penalties
@@ -180,7 +183,8 @@ def rank_and_categorize_pathways(user_data, pathways, algorithm_parameters):
     for pathway in pathways:
         # Calculate match scores for skills, experience, location, and PR points
         skill_match = calculate_skill_match(user_data['skills'], pathway['required_skills'])
-        experience_match = calculate_experience_match(user_data['experience_years'], pathway['required_experience_years'])
+        experience_match = calculate_experience_match(user_data['experience_years'],
+                                                      pathway['required_experience_years'])
         location_match = calculate_location_match(user_data['preferred_locations'], pathway['preferred_locations'])
         pr_points_match = calculate_pr_points_match(user_data['pr_points'], pathway['pr_points_threshold'])
 
@@ -201,7 +205,8 @@ def rank_and_categorize_pathways(user_data, pathways, algorithm_parameters):
 
         # Calculate total score for the pathway
         total_score = calculate_total_score(skill_match, experience_match, location_match, pr_points_match,
-                                            course_completion, difficulty_level, success_rate, cost, duration, algorithm_parameters)
+                                            course_completion, difficulty_level, success_rate, cost, duration,
+                                            algorithm_parameters)
 
         # Collect all the data for each pathway
         pathway_info = {
@@ -248,11 +253,6 @@ def recommend_pr_pathways(user, db):
     return recommendations
 
 
-
-
-
-
-
 # Function to save a preferred pathway to the database
 # Function to save a preferred pathway to the database
 def save_preferred_pathway(user_id, pathway, db):
@@ -288,7 +288,6 @@ def save_preferred_pathway(user_id, pathway, db):
         })
 
     return "Recommendation saved successfully!"
-
 
 
 # Function to fetch saved recommendations
@@ -338,7 +337,6 @@ def show_recommendations(recommendations, user, db, rec_saved):
             st.write(f"No {category.lower()} pathways found.")
 
 
-
 # Function to remove a saved pathway from the database
 def remove_saved_pathway(user_id, pathway_id, db):
     # Remove the pathway from the user's saved recommendations
@@ -347,6 +345,7 @@ def remove_saved_pathway(user_id, pathway_id, db):
         {"$pull": {"saved_recommendations": {"pathway_id": ObjectId(pathway_id)}}}
     )
     return "Recommendation removed successfully!"
+
 
 # Function to display saved recommendations
 def show_saved_recommendations(user, db):
@@ -378,9 +377,6 @@ def show_saved_recommendations(user, db):
         st.write("No saved pathways yet.")
 
         return pd.DataFrame()
-
-
-
 
 # # Main function to handle the page logic
 # def main(user, db):

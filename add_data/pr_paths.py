@@ -1,8 +1,7 @@
-from pymongo import MongoClient
-from bson import ObjectId
-from datetime import datetime
 import os
+
 from dotenv import load_dotenv
+from pymongo import MongoClient
 
 # Load MongoDB URI from environment variables
 load_dotenv()
@@ -152,7 +151,8 @@ pr_pathways = [
         "pathway_name": "Civil Engineering Pathway",
         "required_skills": [skills_dict["Civil Engineering"], skills_dict["Mechanical Engineering"]],
         "required_experience_years": 4,
-        "recommended_courses": [courses[3]["_id"], courses[18]["_id"]],  # Bachelor of Engineering, Master of Civil Engineering
+        "recommended_courses": [courses[3]["_id"], courses[18]["_id"]],
+        # Bachelor of Engineering, Master of Civil Engineering
         "preferred_locations": [locations_dict["Brisbane"], locations_dict["Sydney"]],
         "pr_points_threshold": 70,
         "visa_subclass": "189",
@@ -176,7 +176,8 @@ pr_pathways = [
         "pathway_name": "Business Management Pathway",
         "required_skills": [skills_dict["Business Management"], skills_dict["Finance"]],
         "required_experience_years": 3,
-        "recommended_courses": [courses[4]["_id"], courses[14]["_id"]],  # Master of Business Administration, Master of Marketing
+        "recommended_courses": [courses[4]["_id"], courses[14]["_id"]],
+        # Master of Business Administration, Master of Marketing
         "preferred_locations": [locations_dict["Brisbane"], locations_dict["Melbourne"]],
         "pr_points_threshold": 75,
         "visa_subclass": "189",
@@ -187,7 +188,8 @@ pr_pathways = [
         "pathway_name": "Finance Specialist Pathway",
         "required_skills": [skills_dict["Finance"], skills_dict["Accounting"]],
         "required_experience_years": 3,
-        "recommended_courses": [courses[6]["_id"], courses[16]["_id"]],  # Bachelor of Accounting, Master of Cybersecurity
+        "recommended_courses": [courses[6]["_id"], courses[16]["_id"]],
+        # Bachelor of Accounting, Master of Cybersecurity
         "preferred_locations": [locations_dict["Sydney"]],
         "pr_points_threshold": 65,
         "visa_subclass": "190",
@@ -198,7 +200,8 @@ pr_pathways = [
         "pathway_name": "Marketing Specialist Pathway",
         "required_skills": [skills_dict["Marketing"], skills_dict["Business Management"]],
         "required_experience_years": 3,
-        "recommended_courses": [courses[13]["_id"], courses[4]["_id"]],  # Master of Marketing, Master of Business Administration
+        "recommended_courses": [courses[13]["_id"], courses[4]["_id"]],
+        # Master of Marketing, Master of Business Administration
         "preferred_locations": [locations_dict["Melbourne"], locations_dict["Brisbane"]],
         "pr_points_threshold": 70,
         "visa_subclass": "189",
@@ -331,7 +334,8 @@ pr_pathways = [
         "pathway_name": "Hospitality Management Pathway",
         "required_skills": [skills_dict["Hospitality Management"], skills_dict["Tourism Management"]],
         "required_experience_years": 3,
-        "recommended_courses": [courses[9]["_id"], courses[10]["_id"]],  # Diploma of Event Management, Diploma of Hospitality
+        "recommended_courses": [courses[9]["_id"], courses[10]["_id"]],
+        # Diploma of Event Management, Diploma of Hospitality
         "preferred_locations": [locations_dict["Gold Coast"]],
         "pr_points_threshold": 70,
         "updated_at": datetime.utcnow()

@@ -1,6 +1,7 @@
 from datetime import datetime
+
 import streamlit as st
-from pymongo import MongoClient  # Assuming you're using pymongo for MongoDB
+
 
 def update_profile(user, users_collection, db):
     st.subheader("Update Profile")
@@ -78,19 +79,23 @@ def update_profile(user, users_collection, db):
                                            index=english_proficiency_options.index(current_proficiency)
                                            if current_proficiency in english_proficiency_options else 0)
 
-
     st.divider()
 
     # Employment (Multiple Entries)
     employment_entries = profile.get('employment', [])
-    employment_count = st.number_input("Number of Employment Entries", min_value=1, value=len(employment_entries) if len(employment_entries) > 0 else 1)
+    employment_count = st.number_input("Number of Employment Entries", min_value=1,
+                                       value=len(employment_entries) if len(employment_entries) > 0 else 1)
 
     new_employment = []
     for i in range(employment_count):
         st.write(f"Employment #{i + 1}")
-        job_title = st.text_input(f"Job Title #{i + 1}", employment_entries[i].get('job_title', '') if i < len(employment_entries) else "")
-        company = st.text_input(f"Company #{i + 1}", employment_entries[i].get('company', '') if i < len(employment_entries) else "")
-        years_in_role = st.number_input(f"Years in Current Role #{i + 1}", min_value=0, value=employment_entries[i].get('years_in_current_role', 0) if i < len(employment_entries) else 0)
+        job_title = st.text_input(f"Job Title #{i + 1}",
+                                  employment_entries[i].get('job_title', '') if i < len(employment_entries) else "")
+        company = st.text_input(f"Company #{i + 1}",
+                                employment_entries[i].get('company', '') if i < len(employment_entries) else "")
+        years_in_role = st.number_input(f"Years in Current Role #{i + 1}", min_value=0,
+                                        value=employment_entries[i].get('years_in_current_role', 0) if i < len(
+                                            employment_entries) else 0)
         new_employment.append({
             "job_title": job_title,
             "company": company,
@@ -132,7 +137,6 @@ def update_profile(user, users_collection, db):
 
     st.divider()
 
-
     st.subheader("Preferences")
 
     # Fetch available locations and institutions from MongoDB
@@ -145,12 +149,15 @@ def update_profile(user, users_collection, db):
     valid_location_preferences = [loc for loc in current_location_preferences if loc in location_options]
     valid_study_preferences = [study for study in current_study_preferences if study in study_preferences]
 
-    new_location_preference = st.multiselect("Preferred Locations", location_options, default=valid_location_preferences)
+    new_location_preference = st.multiselect("Preferred Locations", location_options,
+                                             default=valid_location_preferences)
     new_study_preference = st.multiselect("Study Preferences", study_preferences, default=valid_study_preferences)
 
     # Cost and duration limits
-    new_cost_limit = st.number_input("Cost Limit", value=profile.get('preferences', {}).get('cost_limit', 0), min_value=0)
-    new_duration_limit = st.number_input("Duration Limit (months)", value=profile.get('preferences', {}).get('duration_limit', 0), min_value=0)
+    new_cost_limit = st.number_input("Cost Limit", value=profile.get('preferences', {}).get('cost_limit', 0),
+                                     min_value=0)
+    new_duration_limit = st.number_input("Duration Limit (months)",
+                                         value=profile.get('preferences', {}).get('duration_limit', 0), min_value=0)
 
     if st.button("Save Changes"):
         updates = {

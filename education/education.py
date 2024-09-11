@@ -1,20 +1,21 @@
 from datetime import datetime
+
 import streamlit as st
-from bson import ObjectId
 from pymongo import DESCENDING
+
 
 def manage_educational_programs(user, db):
     st.subheader("Manage Your Educational Programs")
 
     # Fetch the institution based on the user's ID (educator)
     institution = db["institutions"].find_one({"user_id": user["_id"]})
-    
+
     if not institution:
         st.error("No institution found for this user.")
         return
-    
+
     institution_id = institution["_id"]
-    
+
     # Fetch courses associated with this educator's institution
     courses = db["courses"].find({"institution_id": institution_id}).sort("updated_at", DESCENDING)
 
@@ -54,5 +55,3 @@ def manage_educational_programs(user, db):
             st.rerun()  # Refresh the page to show new course
         else:
             st.error("Course Name and Location are required.")
-
-

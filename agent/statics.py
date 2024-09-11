@@ -1,5 +1,6 @@
-import streamlit as st
 import pandas as pd
+import streamlit as st
+
 
 # Function to show migration agent statistics and analysis
 def show_migration_agent_statistics(db):
@@ -81,7 +82,6 @@ def show_migration_agent_statistics(db):
         st.table(location_stats_df)
     else:
         st.write("No location preference data available.")
-
 
     # Cost and Duration Analysis
     st.write("Cost and Duration Analysis (Average for Saved Pathways):")

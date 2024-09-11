@@ -1,5 +1,6 @@
-import streamlit as st
 import pandas as pd
+import streamlit as st
+
 
 # Function to aggregate and display anonymized interest statistics for "prospective_migrant" users
 def show_anonymized_interest_statistics(db):

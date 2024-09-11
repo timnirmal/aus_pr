@@ -1,6 +1,7 @@
+from datetime import datetime
+
 import streamlit as st
 from bson.objectid import ObjectId
-from datetime import datetime
 
 
 def manage_user_accounts(db):
@@ -23,7 +24,8 @@ def manage_user_accounts(db):
     # Display user list
     st.subheader("User List")
     for user in users:
-        st.write(f"Username: {user['username']}, Email: {user.get('profile', {}).get('email', 'N/A')}, Status: {'Disabled' if user.get('disabled', False) else 'Active'}")
+        st.write(
+            f"Username: {user['username']}, Email: {user.get('profile', {}).get('email', 'N/A')}, Status: {'Disabled' if user.get('disabled', False) else 'Active'}")
         if st.button(f"View Details of {user['username']}", key=user['_id']):
             view_user_details(user, db)
         if st.button(f"Delete {user['username']}", key=f"delete_{user['_id']}"):

@@ -1,8 +1,8 @@
 from datetime import datetime
 
 import bcrypt
-from bson import ObjectId
 import streamlit as st
+from bson import ObjectId
 
 
 def hash_password(password):
@@ -56,5 +56,3 @@ def authenticate_user(username, password, users_collection):
             return None
     else:
         return None
-
-
