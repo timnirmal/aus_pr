@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 
+
 hide_table_row_index = """
             <style>
             thead tr th:first-child {display:none}
@@ -10,7 +11,6 @@ hide_table_row_index = """
 
 # Inject CSS with Markdown
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
-
 
 # Function to show migration agent statistics and analysis
 def show_migration_agent_statistics(db):
@@ -43,6 +43,12 @@ def show_migration_agent_statistics(db):
 
     pathway_stats_df = pd.DataFrame(pathway_stats_list)
     if not pathway_stats_df.empty:
+        # Inject CSS with Markdown
+        st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
+        # Remove rows where 'pathway_name' is an empty string or 'None'
+        pathway_stats_df = pathway_stats_df.replace("", pd.NA).dropna()
+
         st.table(pathway_stats_df)
     else:
         st.write("No pathway statistics available.")
@@ -66,6 +72,9 @@ def show_migration_agent_statistics(db):
 
     skill_stats_df = pd.DataFrame(skill_stats_list)
     if not skill_stats_df.empty:
+        # Remove rows where 'pathway_name' is an empty string or 'None'
+        skill_stats_df = skill_stats_df.replace("", pd.NA).dropna()
+
         st.table(skill_stats_df)
     else:
         st.write("No skill data available.")
@@ -89,6 +98,9 @@ def show_migration_agent_statistics(db):
 
     location_stats_df = pd.DataFrame(location_stats_list)
     if not location_stats_df.empty:
+        # Remove rows where 'pathway_name' is an empty string or 'None'
+        location_stats_df = location_stats_df.replace("", pd.NA).dropna()
+
         st.table(location_stats_df)
     else:
         st.write("No location preference data available.")
@@ -127,6 +139,9 @@ def show_migration_agent_statistics(db):
 
     cost_duration_df = pd.DataFrame(cost_duration_stats_list)
     if not cost_duration_df.empty:
+        # Remove rows where 'pathway_name' is an empty string or 'None'
+        cost_duration_df = cost_duration_df.replace("", pd.NA).dropna()
+
         st.table(cost_duration_df)
     else:
         st.write("No cost and duration data available.")

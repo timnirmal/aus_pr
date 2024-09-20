@@ -20,10 +20,15 @@ def show_feedbacks_for_admin(db):
             user = db["users"].find_one({"_id": ObjectId(record["user_id"])})
             agent = db["users"].find_one({"_id": ObjectId(record["agent_id"])})
 
+            # Check if user and agent exist to avoid accessing fields of None
+            user_id = str(user['_id']) if user else "Unknown User"
+            agent_name = agent['username'] if agent else "Unknown Agent"
+            pathway_name = pathway['pathway_name'] if pathway else "Unknown Pathway"
+
             feedback_list.append({
-                "pathway_name": pathway['pathway_name'],
-                "agent_name": agent['username'],
-                "user_id": str(user['_id']),
+                "pathway_name": pathway_name,
+                "agent_name": agent_name,
+                "user_id": user_id,
                 "accuracy": record["accuracy"],
                 "feasibility": record["feasibility"],
                 "comments": record["comments"],
@@ -55,7 +60,7 @@ def show_feedbacks_for_admin(db):
                     {"$set": {"reply": reply, "replied_at": datetime.utcnow()}}
                 )
                 st.success(f"Reply for {row['pathway_name']} submitted successfully.")
-                st.rerun()  # Refresh the page to show the updated reply
+                st.experimental_rerun()  # Refresh the page to show the updated reply
     else:
         st.write("No feedback found.")
 

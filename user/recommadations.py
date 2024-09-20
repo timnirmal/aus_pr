@@ -26,16 +26,6 @@ try:
 except Exception as e:
     print(e)
 
-hide_table_row_index = """
-            <style>
-            thead tr th:first-child {display:none}
-            tbody th {display:none}
-            </style>
-            """
-
-# Inject CSS with Markdown
-st.markdown(hide_table_row_index, unsafe_allow_html=True)
-
 
 # Function to fetch user data
 def fetch_user_data(user_id, db):
@@ -356,6 +346,14 @@ def remove_saved_pathway(user_id, pathway_id, db):
     )
     return "Recommendation removed successfully!"
 
+hide_table_row_index = """
+            <style>
+            thead tr th:first-child {display:none}
+            tbody th {display:none}
+            </style>
+            """
+
+
 
 # Function to display saved recommendations
 def show_saved_recommendations(user, db):
@@ -375,6 +373,9 @@ def show_saved_recommendations(user, db):
         # # Display the saved recommendations as a table
         # st.table(saved_df_display.style.hide(axis="index"))
         # st.markdown(saved_df_display.style.hide(axis="index").to_html(), unsafe_allow_html=True)
+
+        # Inject CSS with Markdown
+        st.markdown(hide_table_row_index, unsafe_allow_html=True)
 
         # Display a static table
         st.table(saved_df_display)

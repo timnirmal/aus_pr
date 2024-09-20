@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 
+
 hide_table_row_index = """
             <style>
             thead tr th:first-child {display:none}
@@ -10,7 +11,6 @@ hide_table_row_index = """
 
 # Inject CSS with Markdown
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
-
 
 # Function to aggregate and display anonymized interest statistics for "prospective_migrant" users
 def show_anonymized_interest_statistics(db):
@@ -45,6 +45,12 @@ def show_anonymized_interest_statistics(db):
     # Convert the list to a DataFrame for easier display
     stats_df = pd.DataFrame(stats_list)
 
+    # Remove rows where 'pathway_name' is an empty string or 'None'
+    stats_df = stats_df.replace("", pd.NA).dropna()
+
+    # Inject CSS with Markdown
+    st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
     # Display the statistics in a table
     if not stats_df.empty:
         st.table(stats_df)
@@ -75,6 +81,9 @@ def aggregate_user_preferences(db):
     location_stats_df = pd.DataFrame(location_stats_list)
 
     if not location_stats_df.empty:
+        # Remove rows where 'pathway_name' is an empty string or 'None'
+        location_stats_df = location_stats_df.replace("", pd.NA).dropna()
+
         st.table(location_stats_df)
     else:
         st.write("No location preference data available.")
@@ -98,6 +107,9 @@ def aggregate_user_preferences(db):
     course_stats_df = pd.DataFrame(course_stats_list)
 
     if not course_stats_df.empty:
+        # Remove rows where 'pathway_name' is an empty string or 'None'
+        course_stats_df = course_stats_df.replace("", pd.NA).dropna()
+
         st.table(course_stats_df)
     else:
         st.write("No course preference data available.")
@@ -121,6 +133,9 @@ def aggregate_user_preferences(db):
     institution_stats_df = pd.DataFrame(institution_stats_list)
 
     if not institution_stats_df.empty:
+        # Remove rows where 'pathway_name' is an empty string or 'None'
+        institution_stats_df = institution_stats_df.replace("", pd.NA).dropna()
+
         st.table(institution_stats_df)
     else:
         st.write("No institution preference data available.")

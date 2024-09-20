@@ -6,6 +6,7 @@ from bson import ObjectId
 
 from user.recommadations import recommend_pr_pathways
 
+
 hide_table_row_index = """
             <style>
             thead tr th:first-child {display:none}
@@ -15,7 +16,6 @@ hide_table_row_index = """
 
 # Inject CSS with Markdown
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
-
 
 # Function to fetch anonymized user profiles for agent to choose from
 def get_anonymized_user_profiles(db):
@@ -63,6 +63,9 @@ def show_recommendations_for_feedback(user, recommendations, db):
         st.subheader(f"{category.upper()} PATHWAYS:")
 
         if paths:
+            # Inject CSS with Markdown
+            st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
             df = pd.DataFrame(paths)
             df_display = df[['pathway_name', 'cost', 'duration', 'success_rate', 'difficulty_level',
                              'required_skills', 'recommended_courses', 'locations', 'pr_points_threshold']]
@@ -138,6 +141,9 @@ def show_past_feedback(user, db):
 
     # Display feedback if available
     if feedback_list:
+        # Inject CSS with Markdown
+        st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
         feedback_df = pd.DataFrame(feedback_list)
         st.table(feedback_df)
     else:

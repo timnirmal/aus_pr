@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 from bson import ObjectId
 
+
 hide_table_row_index = """
             <style>
             thead tr th:first-child {display:none}
@@ -11,7 +12,6 @@ hide_table_row_index = """
 
 # Inject CSS with Markdown
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
-
 
 # Function to generate usage and trend report for admins
 def generate_admin_report(db):
@@ -49,6 +49,8 @@ def generate_admin_report(db):
 
     saved_recs_df = pd.DataFrame(saved_recs_list)
     if not saved_recs_df.empty:
+        # Inject CSS with Markdown
+        st.markdown(hide_table_row_index, unsafe_allow_html=True)
         st.write("Top 10 Most Saved Pathways:")
         st.table(saved_recs_df)
     else:
