@@ -60,11 +60,16 @@ def update_profile(user, users_collection, db):
 
     # Passport Details
     st.subheader("Passport Details")
-    new_family_name = st.text_input("Family Name (as in Passport)", profile.get('passport_family_name', ''))
-    new_given_name = st.text_input("Given Name (as in Passport)", profile.get('passport_given_name', ''))
-    new_sex = st.radio("Sex", gender_options, index=gender_options.index(profile.get('sex', 'Male')))
-    new_passport_country_of_birth = st.selectbox("Country of Birth", nationalities)
-    new_passport_country = st.selectbox("Country of Passport", nationalities)
+
+    # Convert to lowercase
+    nationalities_lowercase = [nationality.lower() for nationality in nationalities]
+
+    # Nationality select box with default set to "Sri Lankan"
+    new_nationality = st.selectbox("Country of Passport", nationalities_lowercase,
+                                   index=nationalities_lowercase.index(profile.get('nationality', '').lower())
+                                   if profile.get('nationality', '').lower() in nationalities_lowercase
+                                   else nationalities_lowercase.index("sri lankan"))
+
 
     # Citizenship
     st.subheader("Citizenship")
@@ -104,14 +109,7 @@ def update_profile(user, users_collection, db):
         relationship_status = st.selectbox("Relationship Status", ["Divorced", "Engaged", "Never Married",
                                                                    "Permanently Separated", "Widowed"])
 
-    # Convert to lowercase
-    nationalities_lowercase = [nationality.lower() for nationality in nationalities]
-
-    # Nationality select box with default set to "Sri Lankan"
-    new_nationality = st.selectbox("Nationality", nationalities_lowercase,
-                                   index=nationalities_lowercase.index(profile.get('nationality', '').lower())
-                                   if profile.get('nationality', '').lower() in nationalities_lowercase
-                                   else nationalities_lowercase.index("sri lankan"))
+    st.subheader("Skills")
 
     # Skills with limit of 10
     available_skills = [skill['skill_name'] for skill in db["skills"].find()]
