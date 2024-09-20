@@ -1,7 +1,6 @@
 import pandas as pd
 import streamlit as st
 
-
 hide_table_row_index = """
             <style>
             thead tr th:first-child {display:none}
@@ -11,6 +10,7 @@ hide_table_row_index = """
 
 # Inject CSS with Markdown
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
 
 # Function to aggregate and display anonymized interest statistics for "prospective_migrant" users
 def show_anonymized_interest_statistics(db):

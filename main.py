@@ -1,8 +1,9 @@
+import os
+
 import streamlit as st
+from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-import os
-from dotenv import load_dotenv
 
 from admin.manage_user_account import manage_user_accounts
 from admin.refine_algo import admin_refine_algorithm
@@ -11,11 +12,10 @@ from admin.statics import admin_report_page
 from agent.feedback import show_past_feedback, show_agent_feedbacks
 from agent.statics import show_migration_agent_statistics
 from education.education import manage_educational_programs
-
 from education.statics import show_full_anonymized_statistics
+from user.inquery import user_inquiry_section
 from user.questions import update_profile
 from user.recommadations import recommend_pr_pathways, show_recommendations, show_saved_recommendations
-from user.inquery import user_inquiry_section
 from user.user_management import create_user, authenticate_user
 
 load_dotenv()
@@ -169,12 +169,14 @@ def login_form():
 
     st.markdown('</div>', unsafe_allow_html=True)
 
+
 def register_form():
     # st.markdown('<div class="auth-container">', unsafe_allow_html=True)
     st.header("Register")
     new_username = st.text_input("Username")
     new_password = st.text_input("Password", type="password")
-    user_type = st.selectbox("User Type", ["prospective_migrant", "migration_agent", "education_provider", "administrator"])
+    user_type = st.selectbox("User Type",
+                             ["prospective_migrant", "migration_agent", "education_provider", "administrator"])
 
     if st.button("Register"):
         # Check if both username and password are entered
@@ -198,7 +200,6 @@ def register_form():
         st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
-
 
 
 def show_user_dashboard(user):

@@ -6,7 +6,6 @@ from bson import ObjectId
 
 from user.recommadations import recommend_pr_pathways
 
-
 hide_table_row_index = """
             <style>
             thead tr th:first-child {display:none}
@@ -16,6 +15,7 @@ hide_table_row_index = """
 
 # Inject CSS with Markdown
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
 
 # Function to fetch anonymized user profiles for agent to choose from
 def get_anonymized_user_profiles(db):
