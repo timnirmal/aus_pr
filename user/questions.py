@@ -24,10 +24,10 @@ def update_profile(user, users_collection, db):
     new_date_of_birth_datetime = datetime.combine(new_date_of_birth, datetime.min.time()) if new_date_of_birth else None
 
     # Gender
-    gender_options = ["Male", "Female", "Other"]
+    gender_options = ["Male", "Female"]
     new_gender = st.selectbox("Gender", gender_options,
-                              index=gender_options.index(profile.get('gender', 'Other'))
-                              if profile.get('gender', 'Other') in gender_options else 2)
+                              index=gender_options.index(profile.get('gender', 'Male'))
+                              if profile.get('gender', 'Male') in gender_options else 0)
 
     # Current Location
     new_location = st.text_input("Current Location", profile.get('location', ''))
@@ -67,10 +67,19 @@ def update_profile(user, users_collection, db):
                                    if profile.get('nationality', '').lower() in nationalities_lowercase
                                    else nationalities_lowercase.index("sri lankan"))
 
-    # Skills
+    # Skills with limit of 10
     available_skills = [skill['skill_name'] for skill in db["skills"].find()]
     current_skills = profile.get('skills', [])
-    new_skills = st.multiselect("Skills", available_skills, default=current_skills)
+    new_skills = st.multiselect("Skills (max 10)", available_skills, default=current_skills)
+
+    # Enforce skill limit
+    if len(new_skills) > 10:
+        st.error("You can select a maximum of 10 skills.")
+        # Reset to previous selection if more than 10 skills are selected
+        new_skills = current_skills
+    else:
+        # Update the profile with the new skills if within limit
+        profile['skills'] = new_skills
 
     # English proficiency
     english_proficiency_options = ["Beginner", "Intermediate", "Advanced", "Native"]

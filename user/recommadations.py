@@ -26,6 +26,16 @@ try:
 except Exception as e:
     print(e)
 
+hide_table_row_index = """
+            <style>
+            thead tr th:first-child {display:none}
+            tbody th {display:none}
+            </style>
+            """
+
+# Inject CSS with Markdown
+st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
 
 # Function to fetch user data
 def fetch_user_data(user_id, db):
@@ -318,13 +328,13 @@ def show_recommendations(recommendations, user, db, rec_saved):
 
             # st.write(df.columns)
 
-            # Adjust the DataFrame display to show full fields like skills, courses, and locations
-            df_display = df[['pathway_id', 'pathway_name', 'score', 'cost', 'duration', 'success_rate',
+            # Adjust the DataFrame display to remove the index and the pathway_id column
+            df_display = df[['pathway_name', 'score', 'cost', 'duration', 'success_rate',
                              'difficulty_level', 'required_skills', 'required_experience_years',
                              'pr_points_threshold', 'recommended_courses', 'locations']]
 
-            # Display the DataFrame in Streamlit
-            st.table(df_display)
+            # Display the DataFrame without index
+            st.table(df_display.reset_index(drop=True))
 
             # Save button for each recommendation, only show if the pathway is not already saved
             for i, path in df.iterrows():
@@ -362,7 +372,11 @@ def show_saved_recommendations(user, db):
         saved_df_display = saved_df[['pathway_name', 'cost', 'duration', 'success_rate', 'difficulty_level',
                                      'required_skills', 'recommended_courses', 'locations', 'pr_points_threshold']]
 
-        # Display the saved recommendations as a table
+        # # Display the saved recommendations as a table
+        # st.table(saved_df_display.style.hide(axis="index"))
+        # st.markdown(saved_df_display.style.hide(axis="index").to_html(), unsafe_allow_html=True)
+
+        # Display a static table
         st.table(saved_df_display)
 
         # Add "Remove" buttons for each saved recommendation

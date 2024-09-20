@@ -28,6 +28,44 @@ db = client["aus-pr"]
 users_collection = db["users"]
 print("Connected to MongoDB")
 
+# Custom CSS for styling
+custom_css = """
+    <style>
+    body {
+        background-color: #F2F2F2;
+    }
+    .auth-container {
+        max-width: 400px;
+        margin: auto;
+        padding: 40px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+        color: #2BA9E0;
+    }
+    .stButton button {
+        width: 100%;
+        background-color: #2BA9E0;
+        color: white;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .stButton button:hover {
+        background-color: #0C2A50;
+    }
+    a {
+        color: #2BA9E0;
+        text-align: center;
+        display: block;
+        margin-top: 20px;
+        cursor: pointer;
+    }
+    </style>
+"""
+st.markdown(custom_css, unsafe_allow_html=True)
+
 # Send a ping to confirm a successful connection
 try:
     client.admin.command('ping')
@@ -37,8 +75,6 @@ except Exception as e:
 
 
 def main():
-    st.title("Migration Application System")
-
     if 'logged_in' not in st.session_state:
         st.session_state.logged_in = False
         st.session_state.user = None
@@ -90,38 +126,79 @@ def main():
             st.rerun()
 
     else:
-        # User is not logged in, show login/register menu
-        menu = ["Login", "Register"]
-        choice = st.sidebar.selectbox("Menu", menu)
+        st.title("Migration Application System")
 
-        if choice == "Login":
-            st.subheader("Login")
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
+        if 'logged_in' not in st.session_state:
+            st.session_state.logged_in = False
+            st.session_state.user = None
 
-            if st.button("Login"):
-                user = authenticate_user(username, password, users_collection)
-                if user:
-                    st.session_state.logged_in = True
-                    st.session_state.user = user
-                    st.success(f"Logged in as {user['username']} ({user['user_type']})")
-                    st.rerun()
-                else:
-                    st.error("Invalid username or password")
+        if st.session_state.logged_in:
+            st.subheader(f"Welcome, {st.session_state.user['username']}!")
+            # Add navigation based on user type after login (similar to previous logic)
+        else:
+            # User is not logged in, display login form by default
+            if 'page' not in st.session_state:
+                st.session_state.page = "login"
 
-        elif choice == "Register":
-            st.subheader("Register")
-            new_username = st.text_input("Username")
-            new_password = st.text_input("Password", type="password")
-            user_type = st.selectbox("User Type",
-                                     ["prospective_migrant", "migration_agent", "education_provider", "administrator"])
+            if st.session_state.page == "login":
+                login_form()
+            elif st.session_state.page == "register":
+                register_form()
 
-            if st.button("Register"):
-                if users_collection.find_one({"username": new_username}):
-                    st.error("Username already exists")
-                else:
-                    create_user(new_username, new_password, user_type, users_collection)
-                    st.success("Registration successful. Please login.")
+
+def login_form():
+    # st.markdown('<div class="auth-container"> Login', unsafe_allow_html=True)
+    st.header("Login")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        user = authenticate_user(username, password, users_collection)
+        if user:
+            st.session_state.logged_in = True
+            st.session_state.user = user
+            st.success(f"Logged in as {user['username']} ({user['user_type']})")
+            st.rerun()
+        else:
+            st.error("Invalid username or password")
+
+    # Properly trigger page change using session_state
+    if st.button("Go to Register"):
+        st.session_state.page = "register"
+        st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+def register_form():
+    # st.markdown('<div class="auth-container">', unsafe_allow_html=True)
+    st.header("Register")
+    new_username = st.text_input("Username")
+    new_password = st.text_input("Password", type="password")
+    user_type = st.selectbox("User Type", ["prospective_migrant", "migration_agent", "education_provider", "administrator"])
+
+    if st.button("Register"):
+        # Check if both username and password are entered
+        if not new_username:
+            st.error("Please enter a username.")
+        elif not new_password:
+            st.error("Please enter a password.")
+        else:
+            # Check if username already exists
+            if users_collection.find_one({"username": new_username}):
+                st.error("Username already exists")
+            else:
+                create_user(new_username, new_password, user_type, users_collection)
+                st.success("Registration successful. Please login.")
+                st.session_state.page = "login"
+                st.rerun()
+
+    # Button to switch back to login form
+    if st.button("Go to Login"):
+        st.session_state.page = "login"
+        st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 def show_user_dashboard(user):

@@ -3,6 +3,16 @@ import streamlit as st
 from bson import ObjectId
 
 
+hide_table_row_index = """
+            <style>
+            thead tr th:first-child {display:none}
+            tbody th {display:none}
+            </style>
+            """
+
+# Inject CSS with Markdown
+st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
 # Function to generate usage and trend report for admins
 def generate_admin_report(db):
     st.subheader("Admin Report: Usage and Trends")

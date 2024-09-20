@@ -2,6 +2,16 @@ import pandas as pd
 import streamlit as st
 
 
+hide_table_row_index = """
+            <style>
+            thead tr th:first-child {display:none}
+            tbody th {display:none}
+            </style>
+            """
+
+# Inject CSS with Markdown
+st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
 # Function to show migration agent statistics and analysis
 def show_migration_agent_statistics(db):
     st.subheader("Migration Agent Statistics and Analysis")
