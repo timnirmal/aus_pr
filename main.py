@@ -1,3 +1,5 @@
+from typing import re
+
 import streamlit as st
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -171,34 +173,59 @@ def login_form():
     st.markdown('</div>', unsafe_allow_html=True)
 
 def register_form():
-    # st.markdown('<div class="auth-container">', unsafe_allow_html=True)
     st.header("Register")
     new_username = st.text_input("Username")
+    new_email = st.text_input("Email")
     new_password = st.text_input("Password", type="password")
     user_type = st.selectbox("User Type", ["prospective_migrant", "migration_agent", "education_provider", "administrator"])
 
+    # Email regex pattern for validation
+    email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+
+    def validate_password(password):
+        if len(password) < 8:
+            return "Password must be at least 8 characters long."
+        if not any(char.isupper() for char in password):
+            return "Password must contain at least one uppercase letter."
+        if not any(char.islower() for char in password):
+            return "Password must contain at least one lowercase letter."
+        if not any(char.isdigit() for char in password):
+            return "Password must contain at least one number."
+        if not any(char in "@$!%*?&" for char in password):
+            return "Password must contain at least one special character (@, $, !, %, *, ?, &)."
+        return None  # If all conditions are satisfied
+
     if st.button("Register"):
-        # Check if both username and password are entered
+        # Check if username, email, and password are entered
         if not new_username:
             st.error("Please enter a username.")
+        elif not new_email:
+            st.error("Please enter an email.")
+        elif not re.match(email_regex, new_email):
+            st.error("Please enter a valid email address.")
         elif not new_password:
             st.error("Please enter a password.")
         else:
-            # Check if username already exists
-            if users_collection.find_one({"username": new_username}):
-                st.error("Username already exists")
+            password_error = validate_password(new_password)
+            if password_error:
+                st.error(password_error)
             else:
-                create_user(new_username, new_password, user_type, users_collection)
-                st.success("Registration successful. Please login.")
-                st.session_state.page = "login"
-                st.rerun()
+                # Check if username already exists
+                if users_collection.find_one({"username": new_username}):
+                    st.error("Username already exists.")
+                elif users_collection.find_one({"email": new_email}):
+                    st.error("Email already exists.")
+                else:
+                    # Create user if validation passes
+                    create_user(new_username, new_password, user_type, users_collection)
+                    st.success("Registration successful. Please login.")
+                    st.session_state.page = "login"
+                    st.rerun()
 
     # Button to switch back to login form
     if st.button("Go to Login"):
         st.session_state.page = "login"
         st.rerun()
-
-    st.markdown('</div>', unsafe_allow_html=True)
 
 
 

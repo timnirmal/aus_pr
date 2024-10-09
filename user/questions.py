@@ -208,9 +208,9 @@ def update_profile(user, users_collection, db):
 
     # Cost and duration limits
     new_cost_limit = st.number_input("Cost Limit", value=profile.get('preferences', {}).get('cost_limit', 0),
-                                     min_value=0)
+                                     min_value=0, step=5000)
     new_duration_limit = st.number_input("Duration Limit (months)",
-                                         value=profile.get('preferences', {}).get('duration_limit', 0), min_value=0)
+                                         value=profile.get('preferences', {}).get('duration_limit', 0), min_value=0, step=3)
 
     if st.button("Save Changes"):
         updates = {
