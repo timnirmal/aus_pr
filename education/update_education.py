@@ -31,7 +31,7 @@ def manage_course_updates(user, db):
     # Prefill the course details for editing
     new_course_name = st.text_input("Course Name", value=selected_course["course_name"])
     new_location = st.text_input("Location", value=selected_course["location"])
-    new_cost = st.number_input("Cost", min_value=0.0, step=0.01, value=selected_course["cost"])
+    new_cost = st.number_input("Cost", min_value=0, step=5000, value=selected_course["cost"])
     new_duration = st.number_input("Duration (months)", min_value=0, value=selected_course["duration"])
     new_pr_points = st.number_input("PR Points", min_value=0, value=selected_course["pr_points"])
     new_capacity = st.number_input("Capacity", min_value=1, step=1, value=selected_course["capacity"])

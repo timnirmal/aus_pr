@@ -16,6 +16,7 @@ from agent.statics import show_migration_agent_statistics
 from education.education import manage_educational_programs
 
 from education.statics import show_full_anonymized_statistics
+from education.update_education import manage_course_updates
 from user.questions import update_profile
 from user.recommadations import recommend_pr_pathways, show_recommendations, show_saved_recommendations
 from user.inquery import user_inquiry_section
@@ -91,7 +92,7 @@ def main():
         elif user_type == "migration_agent":
             menu = ["Dashboard", "Feedbacks", "Logout"]
         elif user_type == "education_provider":
-            menu = ["Dashboard", "Manage Educational Programs", "Logout"]
+            menu = ["Dashboard", "Manage Educational Programs", "Update Course", "Logout"]
         elif user_type == "administrator":
             menu = ["Dashboard", "Refine Recommendation Algorithm", "Manage Users", "Reply", "Inquery", "Logout"]
 
@@ -109,7 +110,10 @@ def main():
             show_past_feedback(st.session_state.user, db)
             show_agent_feedbacks(db)
         elif choice == "Manage Educational Programs" and user_type == "education_provider":
+            st.session_state.page = "manage_courses"
             manage_educational_programs(st.session_state.user, db)
+        elif choice == "Update Course" and user_type == "education_provider":
+            manage_course_updates(st.session_state.user, db)  # Navigate to the new update course page
         elif choice == "Refine Recommendation Algorithm" and user_type == "administrator":
             admin_refine_algorithm(db)  # Admin function to refine recommendation algorithm
         elif choice == "Manage Users" and user_type == "administrator":
