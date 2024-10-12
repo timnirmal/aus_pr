@@ -6,9 +6,10 @@ from pymongo.server_api import ServerApi
 import os
 from dotenv import load_dotenv
 
+from admin.feedback import show_feedbacks_for_admin
 from admin.manage_user_account import manage_user_accounts
 from admin.refine_algo import admin_refine_algorithm
-from admin.reply import show_feedbacks_for_admin, manage_user_inquiries
+from admin.inquery import manage_user_inquiries
 from admin.statics import admin_report_page
 from agent.feedback import show_past_feedback, show_agent_feedbacks
 

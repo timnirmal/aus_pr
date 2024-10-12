@@ -99,10 +99,11 @@ def generate_admin_report(db):
 
     location_list = []
     for location in location_trends:
-        location_list.append({
-            "location": location["_id"],
-            "user_count": location["count"]
-        })
+        if location["_id"]:  # Check if the location is not an empty string
+            location_list.append({
+                "location": location["_id"],
+                "user_count": location["count"]
+            })
 
     location_df = pd.DataFrame(location_list)
     if not location_df.empty:
@@ -110,6 +111,7 @@ def generate_admin_report(db):
         st.table(location_df)
     else:
         st.write("No location preference data available.")
+
 
     # Course trends
     course_trends = db["users"].aggregate([
