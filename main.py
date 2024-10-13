@@ -6,6 +6,7 @@ from pymongo.server_api import ServerApi
 import os
 from dotenv import load_dotenv
 
+from admin.analyze import show_analytics
 from admin.feedback import show_feedbacks_for_admin
 from admin.manage_user_account import manage_user_accounts
 from admin.refine_algo import admin_refine_algorithm
@@ -95,7 +96,7 @@ def main():
         elif user_type == "education_provider":
             menu = ["Dashboard", "Manage Educational Programs", "Update Course", "Logout"]
         elif user_type == "administrator":
-            menu = ["Dashboard", "Refine Recommendation Algorithm", "Manage Users", "Reply", "Inquery", "Logout"]
+            menu = ["Dashboard", "Refine Recommendation Algorithm", "Manage Users", "Reply", "Inquery", "Logout", "View Analytics"]
 
         choice = st.sidebar.selectbox("Navigation", menu)
 
@@ -121,6 +122,8 @@ def main():
             # Admin function to manage users
             manage_user_accounts(db)
             # st.write("User Management for Admin")
+        if choice == "View Analytics" and user_type == "administrator":
+            show_analytics()  # Call the function to show analytics
         elif choice == "Inquery" and user_type == "administrator":
             # Admin function to reply to user queries
             # st.write("Reply to User Queries")
