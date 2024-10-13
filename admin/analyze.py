@@ -94,14 +94,13 @@ def show_analytics():
             st.pyplot(fig)
             st.write(f"This pie chart shows the distribution of the top {top_N} countries of birth in {selected_territory} ({tab_name.lower()}).")
 
-
             # 4. Heatmap of Counts Across Territories and Years
             st.subheader("Heatmap of Counts Across Territories and Years")
             heatmap_data = df.groupby('Territory')[years_columns].sum()
             heatmap_data = heatmap_data.fillna(0)
 
             fig, ax = plt.subplots(figsize=(12, 8))
-            sns.heatmap(heatmap_data, cmap="YlGnBu", annot=True, fmt='.0f', ax=ax)
+            sns.heatmap(heatmap_data, cmap="YlGnBu", annot=False, fmt='.0f', ax=ax)
             ax.set_title(f"Counts Across Territories and Years ({tab_name})")
             ax.set_xlabel("Year")
             ax.set_ylabel("Territory")

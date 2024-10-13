@@ -86,52 +86,53 @@ def main():
         st.session_state.user = None
 
     if st.session_state.logged_in:
-        # User is logged in, show sidebar menu for navigation based on user type
         user_type = st.session_state.user['user_type']
 
+        # Define the menu based on user type
         if user_type == "prospective_migrant":
-            menu = ["Dashboard", "Update Profile", "Inquery", "Logout"]
+            menu = ["Dashboard", "Update Profile", "Inquery", "View Analytics", "Logout"]
         elif user_type == "migration_agent":
             menu = ["Dashboard", "Feedbacks", "Logout"]
         elif user_type == "education_provider":
             menu = ["Dashboard", "Manage Educational Programs", "Update Course", "Logout"]
         elif user_type == "administrator":
-            menu = ["Dashboard", "Refine Recommendation Algorithm", "Manage Users", "Reply", "Inquery", "Logout", "View Analytics"]
+            menu = ["Dashboard", "Refine Recommendation Algorithm", "Manage Users",
+                    "Reply", "Inquery", "View Analytics", "Logout"]
 
-        choice = st.sidebar.selectbox("Navigation", menu)
+        # Display buttons in the sidebar
+        st.sidebar.markdown("<h2 style='text-align: center;'>Navigation</h2>", unsafe_allow_html=True)
 
-        if choice == "Dashboard":
+        # Render each menu item as a button
+        selected_menu_item = None
+        for item in menu:
+            if st.sidebar.button(item):
+                selected_menu_item = item
+
+        # Navigate based on the selected menu item
+        if selected_menu_item == "Dashboard":
             show_user_dashboard(st.session_state.user)
-        elif choice == "Update Profile":
+        elif selected_menu_item == "Update Profile":
             update_profile_page(st.session_state.user)
-        elif choice == "Inquery" and user_type == "prospective_migrant":
+        elif selected_menu_item == "Inquery" and user_type == "prospective_migrant":
             user_inquiry_section(st.session_state.user, db)
-        elif choice == "Feedbacks" and user_type == "migration_agent":
-            # Add logic to Feedbacks here
-            st.write("Client Management Page for Migration Agents")
+        elif selected_menu_item == "Feedbacks" and user_type == "migration_agent":
             show_past_feedback(st.session_state.user, db)
             show_agent_feedbacks(db)
-        elif choice == "Manage Educational Programs" and user_type == "education_provider":
-            st.session_state.page = "manage_courses"
+        elif selected_menu_item == "Manage Educational Programs" and user_type == "education_provider":
             manage_educational_programs(st.session_state.user, db)
-        elif choice == "Update Course" and user_type == "education_provider":
-            manage_course_updates(st.session_state.user, db)  # Navigate to the new update course page
-        elif choice == "Refine Recommendation Algorithm" and user_type == "administrator":
-            admin_refine_algorithm(db)  # Admin function to refine recommendation algorithm
-        elif choice == "Manage Users" and user_type == "administrator":
-            # Admin function to manage users
+        elif selected_menu_item == "Update Course" and user_type == "education_provider":
+            manage_course_updates(st.session_state.user, db)
+        elif selected_menu_item == "Refine Recommendation Algorithm" and user_type == "administrator":
+            admin_refine_algorithm(db)
+        elif selected_menu_item == "Manage Users" and user_type == "administrator":
             manage_user_accounts(db)
-            # st.write("User Management for Admin")
-        if choice == "View Analytics" and user_type == "administrator":
-            show_analytics()  # Call the function to show analytics
-        elif choice == "Inquery" and user_type == "administrator":
-            # Admin function to reply to user queries
-            # st.write("Reply to User Queries")
+        elif selected_menu_item == "View Analytics":
+            show_analytics()
+        elif selected_menu_item == "Inquery" and user_type == "administrator":
             manage_user_inquiries(db)
-        elif choice == "Reply" and user_type == "administrator":
-            # Admin function to reply to user queries
+        elif selected_menu_item == "Reply" and user_type == "administrator":
             show_feedbacks_for_admin(db)
-        elif choice == "Logout":
+        elif selected_menu_item == "Logout":
             st.session_state.logged_in = False
             st.session_state.user = None
             st.rerun()
@@ -145,9 +146,7 @@ def main():
 
         if st.session_state.logged_in:
             st.subheader(f"Welcome, {st.session_state.user['username']}!")
-            # Add navigation based on user type after login (similar to previous logic)
         else:
-            # User is not logged in, display login form by default
             if 'page' not in st.session_state:
                 st.session_state.page = "login"
 
