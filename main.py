@@ -1,4 +1,4 @@
-from typing import re
+import re
 
 import streamlit as st
 from pymongo.mongo_client import MongoClient
