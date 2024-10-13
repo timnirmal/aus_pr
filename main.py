@@ -84,6 +84,8 @@ def main():
     if 'logged_in' not in st.session_state:
         st.session_state.logged_in = False
         st.session_state.user = None
+    if 'page' not in st.session_state:
+        st.session_state.page = "login"
 
     if st.session_state.logged_in:
         user_type = st.session_state.user['user_type']
@@ -99,14 +101,20 @@ def main():
             menu = ["Dashboard", "Refine Recommendation Algorithm", "Manage Users",
                     "Reply", "Inquery", "View Analytics", "Logout"]
 
+        # Initialize selected menu item if not set
+        if 'selected_menu_item' not in st.session_state:
+            st.session_state.selected_menu_item = "Dashboard"  # Default page
+
         # Display buttons in the sidebar
         st.sidebar.markdown("<h2 style='text-align: center;'>Navigation</h2>", unsafe_allow_html=True)
 
         # Render each menu item as a button
-        selected_menu_item = None
         for item in menu:
             if st.sidebar.button(item):
-                selected_menu_item = item
+                st.session_state.selected_menu_item = item
+
+        # Use the selected menu item from session state
+        selected_menu_item = st.session_state.selected_menu_item
 
         # Navigate based on the selected menu item
         if selected_menu_item == "Dashboard":

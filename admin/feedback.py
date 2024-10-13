@@ -9,8 +9,15 @@ FEEDBACKS_PER_PAGE = 3
 def show_feedbacks_for_admin(db):
     st.subheader("Feedbacks from Migration Agents")
 
-    # Add a filter for searching feedback by agent name or pathway name
-    search_query = st.text_input("Search Feedbacks by Agent Name or Pathway Name")
+    # Fetch all pathways for the dropdown menu
+    pathways = list(db["pr_pathways"].find({}, {"_id": 1, "pathway_name": 1}))
+    pathway_options = ["All Pathways"] + [pathway["pathway_name"] for pathway in pathways]
+
+    # Map pathway_name to pathway_id (string)
+    pathway_name_to_id = {pathway["pathway_name"]: str(pathway["_id"]) for pathway in pathways}
+
+    # Dropdown menu for selecting pathway
+    selected_pathway_name = st.selectbox("Filter Feedbacks by Pathway", pathway_options)
 
     # Pagination: Get the current page from session_state (default is page 0)
     if 'feedback_page' not in st.session_state:
@@ -18,14 +25,10 @@ def show_feedbacks_for_admin(db):
 
     current_page = st.session_state.feedback_page
 
-    # Fetch feedbacks from the database based on search query
-    if search_query:
-        feedback_records = db["agent_feedback"].find({
-            "$or": [
-                {"comments": {"$regex": search_query, "$options": "i"}},
-                {"agent_name": {"$regex": search_query, "$options": "i"}}
-            ]
-        })
+    # Fetch feedbacks from the database based on selected pathway
+    if selected_pathway_name != "All Pathways":
+        selected_pathway_id = pathway_name_to_id[selected_pathway_name]
+        feedback_records = db["agent_feedback"].find({"pathway_id": selected_pathway_id})
     else:
         feedback_records = db["agent_feedback"].find()
 
@@ -59,6 +62,14 @@ def show_feedbacks_for_admin(db):
     total_feedbacks = len(feedback_df)
     total_pages = (total_feedbacks - 1) // FEEDBACKS_PER_PAGE + 1
 
+    # Adjust current_page if necessary
+    if current_page >= total_pages:
+        current_page = total_pages - 1
+        st.session_state.feedback_page = current_page
+    if current_page < 0:
+        current_page = 0
+        st.session_state.feedback_page = current_page
+
     # Display feedbacks for the current page
     start_index = current_page * FEEDBACKS_PER_PAGE
     end_index = min(start_index + FEEDBACKS_PER_PAGE, total_feedbacks)
@@ -83,13 +94,15 @@ def show_feedbacks_for_admin(db):
             st.success(f"Reply for {row['pathway_name']} submitted successfully.")
             st.rerun()
 
-    # Pagination controls (always show)
+    # Pagination controls
     col1, col2, col3 = st.columns(3)
     with col1:
         if current_page > 0:
             if st.button("Previous", key="prev_feedback"):
                 st.session_state.feedback_page -= 1
                 st.rerun()
+    with col2:
+        st.write(f"Page {current_page + 1} of {total_pages}")
     with col3:
         if current_page < total_pages - 1:
             if st.button("Next", key="next_feedback"):
